@@ -1,0 +1,30 @@
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - type_body_length
+  - file_length
+  - function_body_length
+
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - contains_over_first_not_nil
+  - discouraged_object_literal
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - joined_default_parameter
+  - modifier_order
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - sorted_first_last
+
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - Packages
+
+reporter: "xcode"
