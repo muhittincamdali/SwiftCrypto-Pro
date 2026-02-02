@@ -4,11 +4,7 @@
 xcuserdata/
 DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.swiftpm/configuration/
 .netrc
 *.xcodeproj
-*.xcworkspace
-*.pbxuser
-*.mode1v3
-*.mode2v3
-*.perspectivev3
-*.moved-aside
+Package.resolved

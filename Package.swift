@@ -3,12 +3,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftCryptoPro",
+    name: "SwiftCrypto-Pro",
     platforms: [
         .iOS(.v15),
-        .macOS(.v12),
-        .tvOS(.v15),
-        .watchOS(.v8)
+        .macOS(.v13),
+        .watchOS(.v8),
+        .tvOS(.v15)
     ],
     products: [
         .library(
@@ -19,12 +19,12 @@ let package = Package(
     targets: [
         .target(
             name: "SwiftCryptoPro",
+            dependencies: [],
             path: "Sources/SwiftCryptoPro"
         ),
         .testTarget(
             name: "SwiftCryptoProTests",
-            dependencies: ["SwiftCryptoPro"],
-            path: "Tests/SwiftCryptoProTests"
+            dependencies: ["SwiftCryptoPro"]
         )
     ]
 )
