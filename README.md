@@ -1,31 +1,59 @@
-# 🔐 SwiftCrypto-Pro
+# SwiftCrypto-Pro
 
-[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
-[![Platforms](https://img.shields.io/badge/Platforms-iOS%2015%2B%20%7C%20macOS%2012%2B-blue.svg)](https://developer.apple.com)
+[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS%2015+%20%7C%20macOS%2013+-blue.svg)](https://developer.apple.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![SPM](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](https://swift.org/package-manager)
+[![SPM](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](Package.swift)
 
-A comprehensive, production-ready cryptography toolkit for Swift. Built entirely on Apple CryptoKit and Security framework — no third-party dependencies.
+**High-level cryptography toolkit for Swift.** AES/RSA encryption, SHA hashing, ECDSA signing, JWT encoding/decoding, TOTP generation, Keychain management, and biometric authentication — all in one package.
 
-## ✨ Features
+---
 
-| Module | Description |
-|--------|-------------|
-| **AES-256 GCM** | Symmetric encryption with authenticated data |
-| **RSA** | Asymmetric encryption with OAEP padding |
-| **SHA-256/512** | Secure hashing with multiple algorithms |
-| **HMAC** | Hash-based message authentication codes |
-| **ECDSA** | Elliptic curve digital signatures |
-| **JWT** | Decode and validate JSON Web Tokens |
-| **TOTP** | Time-based one-time passwords (RFC 6238) |
-| **Keychain** | Secure storage with biometric protection |
-| **Biometrics** | Face ID / Touch ID authentication |
+## Table of Contents
 
-## 📦 Installation
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Encryption](#encryption)
+  - [AES](#aes-encryption)
+  - [RSA](#rsa-encryption)
+- [Hashing](#hashing)
+- [Signing](#signing)
+- [JWT](#jwt)
+- [TOTP](#totp)
+- [Keychain](#keychain)
+- [Biometric Authentication](#biometric-authentication)
+- [Password Generation](#password-generation)
+- [String Extensions](#string-extensions)
+- [Architecture](#architecture)
+- [Requirements](#requirements)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔐 **AES Encryption** | AES-GCM and AES-CBC with 128/256-bit keys |
+| 🔑 **RSA Encryption** | RSA-OAEP with SHA-256 for asymmetric crypto |
+| #️⃣ **Hashing** | SHA-256, SHA-384, SHA-512 with streaming support |
+| 🔏 **HMAC** | HMAC-SHA256/SHA512 message authentication |
+| 🧂 **PBKDF2** | Password-based key derivation |
+| ✍️ **ECDSA Signing** | Elliptic curve digital signatures (P-256) |
+| 🎫 **JWT** | Encode, decode, and validate JSON Web Tokens |
+| 🔢 **TOTP** | Google Authenticator-compatible time-based OTP |
+| 🗝️ **Keychain** | Secure storage with iCloud sync support |
+| 👆 **Biometrics** | Face ID / Touch ID authentication |
+| 🎲 **Passwords** | Configurable secure password generation |
+| 📝 **Extensions** | `"text".sha256`, `"text".aesEncrypted(key:)` |
+
+---
+
+## Installation
 
 ### Swift Package Manager
-
-Add to your `Package.swift`:
 
 ```swift
 dependencies: [
@@ -33,195 +61,313 @@ dependencies: [
 ]
 ```
 
-Or in Xcode: **File → Add Package Dependencies** and paste the repository URL.
+Then add `"SwiftCryptoPro"` to your target dependencies.
 
-## 🚀 Quick Start
+---
 
-### AES-256 Encryption
+## Quick Start
 
 ```swift
 import SwiftCryptoPro
 
-let encryptor = AESEncryptor()
+// Hash a string
+let hash = "Hello, World!".sha256
+print(hash) // "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
 
-// Encrypt
-let key = AESEncryptor.generateKey()
-let encrypted = try encryptor.encrypt("Secret message", using: key)
+// Encrypt with AES
+let key = AESEncryptor.generateKey(size: .bits256)
+let encrypted = try AESEncryptor.encrypt("Secret message", key: key)
+let decrypted = try AESEncryptor.decrypt(encrypted, key: key)
 
-// Decrypt
-let decrypted = try encryptor.decrypt(encrypted, using: key)
-print(decrypted) // "Secret message"
+// Generate TOTP
+let totp = TOTPGenerator(secret: "JBSWY3DPEHPK3PXP")
+let code = try totp.generate() // "482619"
+
+// JWT
+let token = try JWTEncoder.encode(claims: MyClaims(...), key: signingKey)
+let decoded = try JWTDecoder.decode(MyClaims.self, from: token)
+```
+
+---
+
+## Encryption
+
+### AES Encryption
+
+SwiftCrypto-Pro supports AES-GCM (recommended) and AES-CBC:
+
+```swift
+// AES-GCM (default, authenticated encryption)
+let key = AESEncryptor.generateKey(size: .bits256)
+let encrypted = try AESEncryptor.encrypt(plaintext, key: key)
+let decrypted = try AESEncryptor.decrypt(encrypted, key: key)
+
+// AES-CBC
+let iv = AESEncryptor.generateIV()
+let encrypted = try AESEncryptor.encrypt(plaintext, key: key, iv: iv, mode: .cbc)
+
+// Encrypt raw Data
+let encryptedData = try AESEncryptor.encrypt(data: imageData, key: key)
 ```
 
 ### RSA Encryption
 
 ```swift
-let rsa = RSAEncryptor()
-let keyPair = try rsa.generateKeyPair(bits: 2048)
+// Generate key pair
+let keyPair = try RSAEncryptor.generateKeyPair(size: .bits2048)
 
-let encrypted = try rsa.encrypt("Hello RSA", publicKey: keyPair.publicKey)
-let decrypted = try rsa.decrypt(encrypted, privateKey: keyPair.privateKey)
+// Encrypt / Decrypt
+let encrypted = try RSAEncryptor.encrypt("Secret", publicKey: keyPair.publicKey)
+let decrypted = try RSAEncryptor.decrypt(encrypted, privateKey: keyPair.privateKey)
+
+// Export keys
+let publicPEM = try RSAEncryptor.exportPublicKey(keyPair.publicKey)
 ```
 
-### Hashing
+---
+
+## Hashing
 
 ```swift
-let hash = CryptoHasher.sha256("Hello, World!")
-let hmac = HMACGenerator.generate(for: "message", key: "secret", algorithm: .sha256)
+// SHA-256
+let hash256 = Hasher.sha256("Hello")
+let hash512 = Hasher.sha512(data)
+
+// Streaming hash for large files
+var context = Hasher.StreamingContext(algorithm: .sha256)
+context.update(chunk1)
+context.update(chunk2)
+let finalHash = context.finalize()
+
+// HMAC
+let mac = HMAC.authenticate(message: "data", key: secretKey, algorithm: .sha256)
+let valid = HMAC.verify(message: "data", mac: mac, key: secretKey, algorithm: .sha256)
+
+// PBKDF2
+let derivedKey = try PBKDF2.deriveKey(
+    password: "mypassword",
+    salt: salt,
+    iterations: 100_000,
+    keyLength: 32
+)
 ```
 
-### String Extensions
+---
+
+## Signing
 
 ```swift
-let hash = "my secret text".sha256
-let md5 = "hello".md5
-let base64 = "encode me".base64Encoded
+// ECDSA with P-256
+let keyPair = try ECDSASigner.generateKeyPair()
+
+let signature = try ECDSASigner.sign("Important document", privateKey: keyPair.privateKey)
+let valid = try ECDSASigner.verify("Important document", signature: signature, publicKey: keyPair.publicKey)
 ```
 
-### JWT Decoding
+---
+
+## JWT
+
+### Decoding
 
 ```swift
-let decoder = JWTDecoder()
-let claims = try decoder.decode(token: jwtString)
+struct UserClaims: JWTClaims {
+    let sub: String
+    let name: String
+    let exp: Date
+    let iat: Date
+}
 
-print(claims.subject)
-print(claims.expiresAt)
-print(claims.isExpired)
+let decoded = try JWTDecoder.decode(UserClaims.self, from: tokenString)
+print(decoded.claims.name) // "John Doe"
+
+// Validate expiration
+try JWTDecoder.validate(decoded, leeway: 30)
 ```
 
-### TOTP (Google Authenticator Compatible)
+### Encoding
 
 ```swift
-let generator = TOTPGenerator(secret: "JBSWY3DPEHPK3PXP")
-let code = try generator.generateCode()
-print(code) // "482193"
-
-let timeRemaining = generator.timeRemaining
+let claims = UserClaims(sub: "123", name: "John", exp: expDate, iat: Date())
+let token = try JWTEncoder.encode(claims: claims, algorithm: .hs256, key: secretKey)
 ```
 
-### Keychain Storage
+---
+
+## TOTP
+
+Google Authenticator-compatible time-based one-time passwords:
+
+```swift
+let totp = TOTPGenerator(
+    secret: "JBSWY3DPEHPK3PXP",
+    digits: 6,
+    period: 30,
+    algorithm: .sha1
+)
+
+let code = try totp.generate()
+let isValid = try totp.validate(code: "482619")
+
+// Generate provisioning URI for QR codes
+let uri = totp.provisioningURI(issuer: "MyApp", account: "user@example.com")
+// otpauth://totp/MyApp:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=MyApp
+```
+
+---
+
+## Keychain
 
 ```swift
 let keychain = KeychainManager()
 
-// Store
-try keychain.save("api-token-value", forKey: "apiToken")
+// Store and retrieve
+try keychain.set("api-token-value", forKey: "apiToken")
+let token = try keychain.getString(forKey: "apiToken")
 
-// Retrieve
-let token: String? = try keychain.load(forKey: "apiToken")
+// Store Codable objects
+try keychain.set(userCredentials, forKey: "credentials")
+let creds: Credentials = try keychain.get(forKey: "credentials")
 
 // Delete
 try keychain.delete(forKey: "apiToken")
 
-// Store with biometric protection
-try keychain.save("sensitive", forKey: "secret", biometric: true)
+// iCloud Keychain sync
+try keychain.set("synced-value", forKey: "shared", accessibility: .afterFirstUnlock, synchronizable: true)
 ```
 
-### Biometric Authentication
+---
+
+## Biometric Authentication
 
 ```swift
-let auth = BiometricAuth()
+let bioAuth = BiometricAuth()
 
-if auth.isBiometricAvailable {
-    let success = try await auth.authenticate(reason: "Access your wallet")
-    if success {
-        // Authenticated
-    }
+// Check availability
+if bioAuth.isAvailable {
+    print("Biometric type: \(bioAuth.biometricType)") // .faceID or .touchID
+}
+
+// Authenticate
+let result = await bioAuth.authenticate(reason: "Access your wallet")
+switch result {
+case .success:
+    print("Authenticated!")
+case .failure(let error):
+    print("Failed: \(error)")
 }
 ```
 
-### ECDSA Signing
+---
+
+## Password Generation
 
 ```swift
-let signer = ECDSASigner()
-let keyPair = signer.generateKeyPair()
+let password = PasswordGenerator.generate(
+    length: 24,
+    includeUppercase: true,
+    includeLowercase: true,
+    includeDigits: true,
+    includeSymbols: true,
+    excludeAmbiguous: true
+)
+// "Kf9$mWq2!xNp7#Rv4&Yz8*"
 
-let signature = try signer.sign("Important document", privateKey: keyPair.privateKey)
-let isValid = signer.verify("Important document", signature: signature, publicKey: keyPair.publicKey)
+// Passphrase
+let passphrase = PasswordGenerator.generatePassphrase(wordCount: 4, separator: "-")
+// "correct-horse-battery-staple"
+
+// Entropy calculation
+let entropy = PasswordGenerator.entropy(of: password)
+print("Entropy: \(entropy) bits")
 ```
 
-## 🏗️ Architecture
+---
+
+## String Extensions
+
+Convenience extensions for common crypto operations:
+
+```swift
+// Hashing
+"Hello".sha256    // "185f8db3..."
+"Hello".sha512    // "3615f80c..."
+"Hello".md5       // "8b1a9953..." (not for security use)
+
+// HMAC
+"message".hmacSHA256(key: secretKey)
+
+// Base64
+"Hello".base64Encoded    // "SGVsbG8="
+"SGVsbG8=".base64Decoded // "Hello"
+
+// Hex
+data.hexString           // "48656c6c6f"
+Data(hexString: "48656c6c6f")
+```
+
+---
+
+## Architecture
 
 ```
 SwiftCryptoPro/
 ├── Encryption/
-│   ├── AESEncryptor.swift          # AES-256 GCM symmetric encryption
-│   └── RSAEncryptor.swift          # RSA asymmetric encryption
+│   ├── AESEncryptor      # AES-GCM and AES-CBC
+│   └── RSAEncryptor      # RSA-OAEP asymmetric
 ├── Hashing/
-│   ├── Hasher.swift                # SHA-256, SHA-384, SHA-512
-│   └── HMAC.swift                  # HMAC authentication codes
+│   ├── Hasher            # SHA-256/384/512
+│   ├── HMAC              # HMAC message auth
+│   └── PBKDF2            # Key derivation
 ├── Signing/
-│   └── ECDSASigner.swift           # ECDSA digital signatures
+│   └── ECDSASigner       # P-256 ECDSA
 ├── JWT/
-│   ├── JWTDecoder.swift            # JWT token decoder
-│   └── JWTClaims.swift             # JWT claims model
+│   ├── JWTDecoder        # Decode + validate
+│   ├── JWTEncoder        # Create tokens
+│   └── JWTClaims         # Claims protocol
 ├── TOTP/
-│   └── TOTPGenerator.swift         # RFC 6238 TOTP generator
+│   └── TOTPGenerator     # RFC 6238 TOTP
 ├── Keychain/
-│   └── KeychainManager.swift       # Secure keychain wrapper
+│   └── KeychainManager   # Secure storage
 ├── Biometric/
-│   └── BiometricAuth.swift         # Face ID / Touch ID
+│   └── BiometricAuth     # Face/Touch ID
+├── Password/
+│   └── PasswordGenerator # Secure passwords
 └── Extensions/
-    └── String+Crypto.swift         # Convenient string extensions
+    └── String+Crypto     # Convenience extensions
 ```
-
-## 🔒 Security Considerations
-
-- All encryption uses Apple CryptoKit (hardware-accelerated on Apple Silicon)
-- AES uses GCM mode for authenticated encryption
-- RSA uses OAEP with SHA-256 for padding
-- Keychain items can require biometric authentication
-- TOTP implementation follows RFC 6238 strictly
-- No sensitive data is logged or stored in memory longer than needed
-
-## 📋 Requirements
-
-| Platform | Minimum Version |
-|----------|----------------|
-| iOS | 15.0+ |
-| macOS | 12.0+ |
-| tvOS | 15.0+ |
-| watchOS | 8.0+ |
-| Swift | 5.9+ |
-
-## 🧪 Testing
-
-```bash
-swift test
-```
-
-Run specific test suites:
-
-```bash
-swift test --filter EncryptionTests
-```
-
-## 📖 Documentation
-
-All public APIs include DocC-compatible documentation. Generate docs with:
-
-```bash
-swift package generate-documentation
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Apple CryptoKit team for the excellent framework
-- RFC 6238 for TOTP specification
-- RFC 7519 for JWT specification
 
 ---
 
-Made with ❤️ by [Muhittin Camdali](https://github.com/muhittincamdali)
+## Requirements
+
+| Requirement | Version |
+|-------------|---------|
+| Swift | 5.9+ |
+| iOS | 15.0+ |
+| macOS | 13.0+ |
+| watchOS | 8.0+ |
+| Xcode | 15.0+ |
+
+> **Note:** Biometric authentication is only available on iOS and macOS.
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/new-algorithm`)
+3. Write tests for new functionality
+4. Ensure all tests pass (`swift test`)
+5. Commit your changes
+6. Push and open a Pull Request
+
+---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+Made with ❤️ for the Swift community.
