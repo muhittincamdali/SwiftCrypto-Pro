@@ -6,6 +6,8 @@
 
 ---
 
+## 🚀 Killer Feature: Zero-Knowledge E2EE Engine
+Built-in end-to-end encryption. Generate Curve25519 Key Agreements and orchestrate forward-secure messaging without writing raw CryptoKit boilerplate.
 > **🛡️ PART OF THE 2026 UNIFIED CORE**
 > This repository is a verified component of 'The Endless March' initiative. Purified for Swift 6, zero-dependency, and engineered for maximum hardware saturation.
 > 
