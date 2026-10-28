@@ -1,138 +1,51 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/Swift-6.0-FA7343?style=for-the-badge&logo=swift&logoColor=white" alt="Swift 6.0"/>
-  <img src="https://img.shields.io/badge/Platform-iOS%20|%20macOS%20|%20visionOS-007AFF?style=for-the-badge&logo=apple&logoColor=white" alt="Platform"/>
-  <img src="https://img.shields.io/badge/Standard-Unified%20Core-5856D6?style=for-the-badge" alt="Standard"/>
-</p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/SwiftCrypto-Pro/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/SwiftCrypto-Pro/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/SwiftCrypto-Pro/main/.github/brand/banner-light.svg" alt="SwiftCrypto Pro has moved to iOSSecurityTools"></picture></p>
 
----
+<p align="center"><a href="README.md">English</a> · <a href="README.tr.md">Türkçe</a></p>
 
-## 🚀 Killer Feature: Zero-Knowledge E2EE Engine
-Built-in end-to-end encryption. Generate Curve25519 Key Agreements and orchestrate forward-secure messaging without writing raw CryptoKit boilerplate.
-> **🛡️ PART OF THE 2026 UNIFIED CORE**
-> This repository is a verified component of 'The Endless March' initiative. Purified for Swift 6, zero-dependency, and engineered for maximum hardware saturation.
-> 
-> *Flagship Engines:* [SwiftNetwork](https://github.com/muhittincamdali/SwiftNetwork) | [SwiftAI](https://github.com/muhittincamdali/SwiftAI) | [LiquidGlassKit](https://github.com/muhittincamdali/LiquidGlassKit)
+# This project now lives in iOSSecurityTools
 
----
+SwiftCrypto Pro is archived. Its cryptography code (symmetric encryption, X25519 key agreement and
+the keychain with biometrics) now lives in
+[iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools), a Swift package of
+security building blocks for iOS, macOS, tvOS, watchOS and visionOS.
 
-<h1 align="center">SwiftCrypto Pro</h1>
+The code was not copied over. It was rebuilt on CryptoKit with tests, and the package also gained
+public-key encryption (HPKE), Ed25519 and P-256 signatures, HMAC and signed tokens (JWT). This
+repository's own code stays here, unchanged, as a record.
 
-<p align="center">
-  <strong>🔐 High-level cryptography for Swift - encryption, JWT, TOTP & biometrics</strong>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Swift-6.0-orange.svg" alt="Swift"/>
-  <img src="https://img.shields.io/badge/iOS-17.0+-blue.svg" alt="iOS"/>
-</p>
-
----
-
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| 🔒 **Encryption** | AES, ChaCha20, RSA |
-| 🎫 **JWT** | Create & verify tokens |
-| ⏰ **TOTP** | 2FA code generation |
-| 🔑 **Keychain** | Secure key storage |
-| 👆 **Biometrics** | Face ID / Touch ID |
-| 🔐 **Hashing** | SHA, HMAC, Argon2 |
-
-## Quick Start
+## Install iOSSecurityTools
 
 ```swift
-import SwiftCryptoPro
-
-// Encrypt data
-let encrypted = try Crypto.encrypt(
-    data: sensitiveData,
-    key: encryptionKey,
-    algorithm: .aes256gcm
-)
-
-// Decrypt data
-let decrypted = try Crypto.decrypt(
-    data: encrypted,
-    key: encryptionKey
-)
-
-// Generate JWT
-let jwt = try JWT.create(
-    claims: ["userId": "123"],
-    secret: jwtSecret,
-    expiration: .hours(24)
-)
-
-// Verify JWT
-let claims = try JWT.verify(jwt, secret: jwtSecret)
-
-// TOTP
-let totp = TOTP(secret: base32Secret)
-let code = totp.generate() // "123456"
-
-// Biometrics
-let authenticated = try await Biometrics.authenticate(
-    reason: "Unlock app"
-)
+.package(url: "https://github.com/muhittincamdali/iOSSecurityTools.git", from: "2.2.0")
 ```
 
-## Encryption
+Add the `iOSSecurityTools` product to your target. Version 2.2.0 needs Swift 6.2 and iOS 17,
+macOS 14, tvOS 17, watchOS 10 or visionOS 1.
 
-```swift
-// AES-256-GCM (recommended)
-let encrypted = try Crypto.encrypt(data, key: key, algorithm: .aes256gcm)
+## Where each part went
 
-// ChaCha20-Poly1305
-let encrypted = try Crypto.encrypt(data, key: key, algorithm: .chacha20)
+| SwiftCrypto Pro                                                           | iOSSecurityTools                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CryptoSymmetric.encrypt(_:key:)` / `decrypt(_:key:)`                     | [`DataCipher`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/Crypto/DataCipher.swift)                                                                                                                                                                                             |
+| `ZeroKnowledgeEngine.generateKeyPair()`                                   | [`PublicKeyCipher.PrivateKey()`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/Crypto/PublicKeyCipher.swift), or `Keychain.keyAgreementKey(forKey:)`                                                                                                                              |
+| `ZeroKnowledgeEngine.deriveSharedSecret(privateKey:remotePublicKeyData:)` | [`KeyDerivation.sharedKey(privateKey:peerPublicKey:info:)`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/Crypto/KeyDerivation%2BAgreement.swift), or `PublicKeyCipher.seal(_:to:)`                                                                                               |
+| `BiometricKeychain`, `BiometricKeychainItem`                              | [`Keychain`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/Keychain/Keychain.swift) with a biometric protection, and [`BiometricAuthenticator`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/Biometrics/BiometricAuthenticator.swift) |
 
-// RSA
-let encrypted = try Crypto.encrypt(data, publicKey: rsaPublicKey)
-```
+The error handler, circuit breaker, retry policy, event bus and metrics collector under
+`KeyManagement/Enterprise` were not carried over: they were general-purpose helpers with no
+cryptography in them. The earlier README also listed JWT, TOTP, RSA and Argon2, but the sources
+never contained them. iOSSecurityTools has JWT
+([`JWTVerifier`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/Tokens/JWTVerifier.swift),
+[`JWTSigner`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/Tokens/JWTSigner.swift))
+and one-time passwords
+([`OneTimePassword`](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/Sources/iOSSecurityTools/OneTimePassword/OneTimePassword.swift));
+it has no RSA, and it uses only Apple's implementations, so there is no Argon2.
 
-## Key Management
-
-```swift
-// Generate secure key
-let key = Crypto.generateKey(bits: 256)
-
-// Store in Keychain
-try Keychain.store(key, for: "encryption_key", biometric: true)
-
-// Retrieve
-let key = try Keychain.retrieve("encryption_key")
-```
-
-## Hashing
-
-```swift
-// SHA-256
-let hash = Crypto.hash(data, algorithm: .sha256)
-
-// HMAC
-let hmac = Crypto.hmac(data, key: key, algorithm: .sha256)
-
-// Password hashing (Argon2)
-let hashedPassword = try Crypto.hashPassword(password)
-let verified = try Crypto.verifyPassword(password, hash: hashedPassword)
-```
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+- [Documentation](https://muhittincamdali.github.io/iOSSecurityTools/documentation/iossecuritytools/)
+- [Moving from SwiftCrypto-Pro](https://github.com/muhittincamdali/iOSSecurityTools/blob/master/CHANGELOG.md#moving-from-swiftcrypto-pro)
+- [iOSSecurityTools source](https://github.com/muhittincamdali/iOSSecurityTools/tree/master/Sources/iOSSecurityTools)
+- [Examples](https://github.com/muhittincamdali/iOSSecurityTools/tree/master/Examples)
 
 ## License
 
-MIT License
-
----
-
-## 📈 Star History
-
-<a href="https://star-history.com/#muhittincamdali/SwiftCrypto-Pro&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=muhittincamdali/SwiftCrypto-Pro&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=muhittincamdali/SwiftCrypto-Pro&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=muhittincamdali/SwiftCrypto-Pro&type=Date" />
- </picture>
-</a>
+MIT, see [LICENSE](LICENSE).
